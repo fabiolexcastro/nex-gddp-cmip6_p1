@@ -185,7 +185,8 @@ calc_ndws <- function(yr, mn){
     ERATIO <- watbal %>% purrr::map('Eratio') %>% terra::rast()
     
     # Calculate number of soil water stress days
-    NDWS   <- terra::app(x = ERATIO, fun = function(ERATIO){ifelse(ERATIO < 0.5, 1, 0)}) %>% sum()
+    cvls <- matrix(data = c(-Inf, 0.5, 1), ncol = 3) # Classification values
+    NDWS <- terra::classify(x = ERATIO, rcl = cvls, right = F) |> sum()
     terra::writeRaster(NDWS, outfile)
     terra::writeRaster(AVAIL, paste0(dirname(outfile),'/AVAIL-',yr,'-',mn,'.tif'))
   }
