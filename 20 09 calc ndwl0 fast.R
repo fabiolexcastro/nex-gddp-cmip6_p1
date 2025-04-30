@@ -166,16 +166,18 @@ calc_ndwl0 <- function(yr, mn){
     }
     ceabyep_calc <- compiler::cmpfun(eabyep_calc)
     
-    watbal <- 1:terra::nlyr(ETMAX) %>%
-      purrr::map(.f = function(i){
-        water_balance <- eabyep_calc(soilcp  = scp,
-                                     soilsat = sst,
-                                     avail   = AVAIL[[terra::nlyr(AVAIL)]],
-                                     rain    = prc[[i]],
-                                     evap    = ETMAX[[i]])
-        AVAIL <<- water_balance$Availability
-        return(water_balance)
-      })
+   for(j in 1:terra::nlyr(ETMAX)){
+      water_balance <- ceabyep_calc(soilcp  = scp,
+                                    soilsat = sst,
+                                    avail   = AVAIL[[terra::nlyr(AVAIL)]],
+                                    rain    = prc[[j]],
+                                    evap    = ETMAX[[j]])
+      # Update AVAIL with deep copy to avoid memory leaks
+      AVAIL <<- terra::deepcopy(water_balance$Availability)
+      # Store result and clean temporary objects
+      watbal[[j]] <- water_balance
+      rm(water_balance)
+    }
     
     LOGGING <- watbal %>% purrr::map('Logging') %>% terra::rast()
     
