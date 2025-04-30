@@ -78,7 +78,7 @@ sst <- sst |> terra::resample(ref) |> terra::mask(ref)
 # yr <- '2021'
 # mn <- '01'
 
-calc_ndwl50 <- function(yr, mn){
+calc_ndws <- function(yr, mn){
   outfile <- paste0(out_dir,'/NDWS-',yr,'-',mn,'.tif')
   cat(outfile,'\n')
   if (!file.exists(outfile)) {
