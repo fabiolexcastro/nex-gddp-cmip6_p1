@@ -131,7 +131,7 @@ calc_ndws <- function(yr, mn){
     # Compute water balance model
     date <- paste0(yr,'-',mn)
     if(date %in% c('2021-01')){
-      AVAIL <<- ETMAX * 0
+      AVAIL <<- ETMAX[[1]] * 0
       AVAIL[!is.na(AVAIL)] <- 0
     } else {
       avail_fl <- list.files(path=dirname(outfile), pattern="AVAIL-")
