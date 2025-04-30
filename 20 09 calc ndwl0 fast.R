@@ -12,6 +12,60 @@ suppressMessages(pacman::p_load(tidyverse,terra,gtools,lubridate))
 root <- '/home/jovyan/common_data'
 ref <- terra::rast('/home/jovyan/common_data/chirps_wrld/chirps-v2.0.1981.01.01.tif')
 
+peest2 <- function(srad, tmin, tmean, tmax){
+  
+  # Convert rasters to matrices for faster processing
+  srad_m  <- terra::values(srad) # this variable comes in .nc format (original raster::values)
+  tmin_m  <- terra::values(tmin)
+  tmean_m <- terra::values(tmean)
+  tmax_m  <- terra::values(tmax)
+  
+  # Constants
+  albedo  <- 0.2
+  vpd_cte <- 0.7
+  a_eslope <- 611.2
+  b_eslope <- 17.67
+  c_eslope <- 243.5
+  
+  # Pre-allocate matrices
+  n_cells <- ncol(srad_m)
+  n_layers <- nrow(srad_m)
+  rn <- matrix(0, nrow = n_layers, ncol = n_cells)
+  eslope <- matrix(0, nrow = n_layers, ncol = n_cells)
+  et_max <- matrix(0, nrow = n_layers, ncol = n_cells)
+  
+  # Optimized calculations
+  rn <- (1-albedo) * srad_m
+  rm(srad_m)
+  
+  temp_denom <- tmean_m + c_eslope
+  eslope <- (a_eslope * b_eslope * c_eslope * exp(b_eslope * tmean_m/temp_denom)) / (temp_denom^2)
+  rm(tmean_m, temp_denom)
+  
+  vpd <- vpd_cte * (0.61120 * (exp((17.67*tmax_m)/(tmax_m+243.5)) - 
+                                 exp((17.67*tmin_m)/(tmin_m+243.5))))
+  rm(tmin_m, tmax_m)
+  
+  # Constants
+  pt_const <- 1.26
+  pt_fact  <- 1
+  vpd_ref  <- 1
+  psycho   <- 62
+  rho_w    <- 997
+  rlat_ht  <- 2.26E6
+  
+  # Final calculation
+  pt_coef <- 1 + (pt_fact*pt_const-1) * vpd / vpd_ref
+  conversion_factor <- 1E6 * 100 / (rlat_ht * rho_w) * 10
+  et_max <- pt_coef * rn * eslope/(eslope+psycho) * conversion_factor
+  
+  # Convert back to raster
+  et_max_rast <- tmin
+  terra::values(et_max_rast) <- et_max
+  
+  return(et_max_rast)
+  
+}
 # Soil variables
 scp <- terra::rast(paste0(root,'/atlas_hazards/soils/sscp_world.tif'))
 scp <- scp %>% terra::resample(ref) %>% terra::mask(ref)
