@@ -227,7 +227,7 @@ for (gcm in gcms) {
     
     1:nrow(stp) |>
       purrr::map(.f = function(i){
-        calc_ndwl50(yr = stp$yrs[i], mn = stp$mns[i])
+        calc_ndws(yr = stp$yrs[i], mn = stp$mns[i])
         gc(verbose = T, full = T, reset = T)
         if (i%%5 == 0) {
           tmpfls <- list.files(tempdir(), full.names=TRUE)
