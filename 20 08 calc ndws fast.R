@@ -1,4 +1,4 @@
-## Number of waterlogging days (days) at 50% saturation (NDWL50)
+## Number of soil water stress days (NDWS)
 ## By: H. Achicanoy & A. Mendez
 ## April, 2025
 
